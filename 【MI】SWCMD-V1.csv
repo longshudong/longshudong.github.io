@@ -1,0 +1,600 @@
+为避免拷贝时误删除指令，先关闭大家的编辑权限，如有新增指令可私发给@ 王家豪 ，来统一更新,,,,,,,,,,,,,,,,,,,
+"方案功能：
+通常情况下，同一个原厂的软件指令可以共用；
+特殊前馈：厂商自定义系统的指令集合。
+输入错误可能导致板卡锁死，需要救板升级，所以需要主要区分。",指令功能,MTK,,,,,,,Amlogic,,,,,,,,,,NTK
+,,MT9216,MT9612,MT9603,MT9026,MT9638,MT9653,MT5510,T963,T963S,T982,T920,T950X4,T950Z4D,T972,T962,T950D5,T966D5,
+启动,关机,,,,,,,,,,,poweroff,,,,,,,
+,重启,,,reboot,,,reboot,,,,,reboot,,,,,"关闭自动重启：
+su
+setprop persist.sys.disable_rescue true",,
+,"退工厂模式
+进用户模式","1、CMD工具发送1230指令可以退
+2、正常开机，输入如下指令：
+su
+switchtouser;echo $?
+重启",,"【退老化、切用户指令】
+su
+factmessager -des
+1230
+1229",,"Kernel模式下：
+switchtouser;echo $?","进入用户模式：
+su
+switchtouser;echo $?",,"切用户方式：
+（1）使用AT测试脚本，先执行退老化的操作，再执行切用户的命令
+（2）使用CCM工具，先发送1481退老化，再发送1230切用户
+（3）使用串口指令：
+su
+switchtouser;
+reboot","su;
+switchtouser",,"切用户
+su;
+switchtouser","su
+am broadcast -a com.duokan.command.fake -e commandid 1230
+reboot","退工厂
+idme bootmode 1
+idme dev_flags 0
+",,,"升级完
+断上电
+输入指令
+su
+switchtouser
+重启","升级完
+断上电
+输入指令
+su
+switchtouser
+重启",
+,开串口,"mboot下敲
+printenv
+setenv close_log no
+setenv dbgLevel DEBUG
+save
+reset
+
+mboot下敲
+setenv UARTOnOff on
+setenv close_log no
+save
+ac loglevel 7
+reset","开串口：
+进入uboot下敲如下指令：
+setenv console_enable 1
+saveenv
+reset
+
+user版本开启串口权限方法：
+mboot下输入：
+setenv UARTOnOff on
+save
+ac loglevel 0
+ac androidboot.console_enable miroot
+saveenv
+reset",关闭串口：112233,"按着回车上电进入boot
+idme fos_flags 1a7","9638 开串口操作：
+setenv UARTOnOff on
+saveenv
+reset",波特率：115200,,"T963开串口：
+uboot下输入
+factorydata write console_enable 1;
+saveenv;
+reboot;","Uboot下:
+factorydata write console_enable 1
+reboot",,,,,,,,,
+,变更log打印等级,,,"用户模式下
+su
+echo 7 > /proc/sys/kernel/printk 
+logcat",,,,"ac loglevel 7
+saveenv
+reset","echo 7 > /proc/sys/kernel/printk（开机后#权限下使用）
+setenv initargs ${initargs} loglevel=7;save（备注：7是开到最大，0是关闭）","Uboot下：
+factorydata write log_level 8---最高
+factorydata write log_level 0---最低","factorydata?write?log_level?8
+saveenv","echo 7 > /proc/sys/kernel/printk
+#7代表开权限最大#",setenv kloglevel 7;save（备注：7是开到最大）,,,,,"开串口打印权限：
+factorydata write console_enable 1
+调串口打印等级：
+factorydata write log_level 7",
+,关打印,"关闭kernel log
+dmesg -n 7
+查看muteflag
+dmesg -C; echo get all > /sys/ke[ACFG_NFX_AR] timeout
+解除mute
+echo WordW1,0X1310,0X19,0,1> /proc/utopia_mddb/riuinfo",,,,,,,,,,echo 0 > /proc/sys/kernel/printk,,"关打印
+su
+echo 0 > /proc/sys/kernel/printk ",,,"方法一：dmesg   -n1
+方法二：echo 0 > /proc/sys/kernel/printk",,按照Ctrl，连续按两次 P。 （第一Ctrl+p和第二个，关闭打印的等级不同）按一下ctrl+P，是关闭打印，按住ctrl同时再按一下p恢复打印。
+,查系统版本,,,,,,,,,,,uname -a,,,,,,,
+,查软件版本,,,,,,开机 主页面：Settings >> Device Preferences >> About >> Android TV OS build,,"开机后su看软件版本
+getprop |grep incremental","用户模式：
+getprop?|grep?incremental",,getprop |grep incremental,,,,,"查询软件版本更新的时间：
+getprop ro.vendor.build.date",,
+,设置上电自动开机/待机,"上电开机:
+在mboot下敲
+setenv factory_poweron_mode direct
+saveenv
+硬开关机
+
+上电进待机：
+在mboot下敲
+setenv factory_poweron_mode secondary
+saveenv
+硬开关机","设置上电待机：
+开机长按回车键进mboot下敲
+setenv factory_poweron_mode secondary
+saveenv
+
+上电开机：在mboot下敲
+setenv factory_poweron_mode direct
+saveenv
+reset","mboot模式下输入：
+
+上电开机：
+uenvset force_poweron_mode direct
+uenvsave
+reset
+上电待机：
+uenvset force_poweron_mode secondary
+uenvsave
+reset",,,,"断电上电 ，按住enter  进入mboot模式  输入  
+setenv factory_poweron_mode
+reset","设置上电待机的方式：
+uboot下输入指令：
+factorydata write factory_power_mode secondary
+
+设置上电开机的方式：
+uboot下输入指令：
+factorydata write factory_power_mode direct",,,"小米上电开机
+上电开机：setenv factory_poweron_mode direct;keyman write factory_power_mode str test;saveenv
+上电待机：setenv factory_poweron_mode secondary;keyman write factory_power_mode str secondary;saveenv",,,,,"设置上电待机：
+开机长按回车键进mboot下敲
+setenv factory_poweron_mode secondary
+saveenv
+
+上电开机：在mboot下敲
+setenv factory_poweron_mode direct
+saveenv
+reset","(1)设置上电开机
+factorydata write factory_power_mode direct;
+(2)设置上电待机
+factorydata write factory_power_mode secondary;
+
+bootloader
+开机进待机:factorydata write factory_power_mode secondary
+开机启动: factorydata write factory_power_mode direct
+
+确认上电状态：
+factorydata dump",
+点屏,没有panel tag（屏标），写屏参,"9216切机型：
+1.mboot下敲detect_id
+2.printenv
+3.cleanallenv
+4.reset","9612切机型：
+1、开机长按Enter键进入mboot
+2、setenv force_panel_type 0x0D
+3、save
+4、reset","MT9603切机型方法：
+mboot下
+setenv force_panel_id 0x03
+save
+reset",,,,,"uboot下
+factorydata?write?assm_mn?dz3n---dz3n是机型
+saveenv
+reboot
+
+若整机没有画面，需要切屏参：
+uboot下输入
+factorydata write assm_mn ''
+saveenv
+reset
+
+重新上电开机：
+Uboot下输入：
+factorydata write assm_mn RZ9N
+saveenv
+reboot
+
+清除tag：
+Uboot下：
+setenv fixtag ''
+saveenv
+reboot
+
+写tag：
+uboot下输入
+setenv fixtag 36
+saveenv;
+reset",,,,,,,,"【点屏指令】
+HV320WHB-F56点屏切屏参：
+按住enter上电在mboot模式下输入如下指令：
+1.setenv model_name HD_HV320WHB-F56
+2.saveenv
+3.reboot
+
+ST3151A07-5点屏切屏参：
+按住enter上电在mboot模式下输入如下指令：
+1.setenv model_name HD_ST3151A07-5
+2.saveenv
+3.reboot
+
+HV430FHB-F94点屏切屏参：
+按住enter上电在mboot模式下输入如下指令：
+1.setenv model_name FHD_HV430FHB-F94
+2.saveenv
+3.reboot","Uboot下输入：(xx为屏参后2位)
+setenv fixtag xx
+saveenv
+reboot
+
+查所有屏参
+model_list",
+,清环境,"mboot下敲
+cleanallenv
+reset","mboot下敲下命令
+printenv
+cleanallenv
+reset
+
+再上电Mboot下敲
+printenv
+确认一下环境是否已被清除了","清MT9603的配置环境
+在Mboot下敲如下指令
+env default -a
+reset",,,,,,,,,,,,,,,
+,删除mn,,,,,,,,"删除mn的方法：
+Uboot下输入
+factorydata write assm_mn """"
+reboot","Uboot下：
+factorydata?write?assm_mn?""""
+savenv
+reboot",,,,,,,,,
+,查tag,"Mboot下：
+printenv","Mboot下：
+printenv","Mboot下：
+printenv",,"Mboot下：
+printenv",,,"mboot下看屏参
+printenv",,,"pr tag
+Kernal下进odm/model目录，然后打开对应的文件；如果识别到的屏参文件是none_0c_0c，则
+将类似于如下的文件，dz2k_0b_54改成dz2k_0c_54，然后reboot进BootLoader下，设置fixtag，setenv fixtag 54，saveenv，reboot即可；",,,,,,,
+,切Region ID,"部分板卡升级后，必须要烧入软件区域定义，小米方案切换地区方法如下：
+首先需要升级，升级完成后（不要进区域选择界面）输入如下命令（不需要在mboot下）
+su
+mount -o rw,remount /
+setenforce 0
+setprop mitv.factory.region in
+sync
+reboot
+（in代表印度，sa代表南美，la代表拉美）",,"查Region
+getprop  |  grep  region
+
+写Region
+setprop mitv.factory.region tw
+reboot
+
+debug版本，串口下应该是可以用这个指令的吧：
+su
+setprop mitv.factory.region la
+sync
+reboot",,,,,,,,,,,,,"切region:
+
+烧录debug版本，执行如下命令
+
+su
+
+cd /sys/class/unifykeys/
+echo ""region"" > name
+echo ""xx"" > write
+
+(注意：xx对应的国家代码，印度是in，欧洲eu，台湾tw)
+
+reboot",,
+,刷 APK ,,,,,,"方法一：uboot 模式下输入：
+cu（适用于ladybird）
+方法二：uboot模式下输入：
+gpio set 187 1;
+gpio set 188 1;
+mtkupgrade usb upgrade 包名称.pkg
+",,,,,,,,,,,,
+,如何查PID,"Mboot下：
+printenv","Mboot下：
+printenv","Mboot下：
+printenv",,"Mboot下：
+printenv",,"su
+cat vendor/project_id/project_id.ini","mboot下看屏参
+printenv","Uboot下：
+printenv",,,,,,,,,
+温升,温控策略,,,,,,,,,,,"查温度：cat sys/class/thermal/thermal_zone0/temp
+查温控：cat /sys/class/thermal/thermal_zone0/mode
+关温控：echo disabled > /sys/class/thermal/thermal_zone0/mode
+开温控：echo enabled > /sys/class/thermal/thermal_zone0/mode
+定时查温度：while true; do cat sys/class/thermal/thermal_zone0/temp;input keyevent 1 ;cat sys/class/thermal/thermal_zone0/temp;sleep 1 ;done",,,,,,,
+,核温指令,"读取核温：
+cat /proc/mstar_dvfs/temperature ","ac no_console_suspend 1
+ac sysrq_always_enabled 1
+ac utopia2k_str_debug 1
+ac initcall_debug 1
+ac loglevel 7
+ac printk.time 1
+setenv WDT_ENABLE 0
+save
+reset
+然后看关键字：Current Temperature","MT9603重载温升测试
+1、输入 setenforce 0
+2、输入 getenforce 看返回值是否为 Permissive
+3、输入 /data/user/0/com.xiaomi.saber/files/eatcpu -percent 0.85 &
+4、输入 ps -ef|grep eatcpu 查看是否已经拉载起来（如进程15487所示）",,,,"xu 7411;cli;cd ptp;t
+#5510方案公版平台#","1.echo disabled > /sys/class/thermal/thermal_zone0/mode     ---关温控
+2.cat /sys/class/thermal/thermal_zone0/mode     ---查温控
+3.cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq   ---查频率
+4.cat /sys/class/thermal/thermal_zone0/temp;      ---查核温
+while true;do cat /sys/class/thermal/thermal_zone0/temp;sleep 1;done  --持续打印温度 Ctrl+C退出
+
+5.重载指令
+echo disabled > /sys/class/thermal/thermal_zone0/mode
+echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+
+echo 1 > /sys/devices/system/cpu/cpu1/online
+echo 1 > /sys/devices/system/cpu/cpu2/online
+echo 1 > /sys/devices/system/cpu/cpu3/online
+",同963,,,,,,,,,cat /sys/devices/platform/soc/thermal/temperature
+,核温周期连读读指令,,,,,,,"while?true;
+do?cat?proc/mstar_dvfs/temperature;
+sleep?1;
+done",,"cat /sys/class/thermal/thermal_zone0/temp---单次读取所有CPU0核温
+while true;do cat /sys/class/thermal/thermal_zone0/temp;sleep 2;done---间隔2s自动读取CPU0核温",,"keyman write console_enable str 1
+针对920和962s8x项目关串口指令（uboot下输入）
+setenv console_enable 0
+saveenv
+reset",,,,,,,"while true;
+do?cat /sys/devices/platform/soc/thermal/temperature;
+sleep?1;
+done
+#1是1s一打印#"
+屏参,查VBO展频,,,,,,,"echo dump,0x1031 > /proc/utopia_mdb/riuinfo",,,,cat /sys/class/aml_lcd/lcd0/ss?,,,,,,,"屏的展频  ，先读后写：
+cat /sys/class/aml_lcd/lcd0/ss;
+echo level xx >/sys/class/aml_lcd/lcd0/ss; xx取值0~60"
+,开展频指令,,,,,,,,echo 0xf > /sys/class/lcd/ss,"cat?/sys/class/lcd/ssecho?freq?x?>/sys/class/lcd/ss
+---改屏信号展频?echo?level?5?>/sys/class/lcd/ss;（范围1~30；2000ppm/step，需要看屏规格书最大支持多少?）查展频?cat?/sys/class/lcd/ss以这个串口指令为准","su
+echo 8 >/proc/sys/kernel/printk 
+T982单独调节p2p每一lane的眼图参数，也适用于VB1眼图
+0xc8:高16bit lane1,低16bit lane0
+0xc9:高16bit lane3,低16bit lane2
+0xca:高16bit lane5,低16bit lane4
+0xcb:高16bit lane7,低16bit lane6
+0xcd:高16bit lane9,低16bit lane8
+0xce:高16bit lane11,低16bit lane10
+每个lane的16bit数值内部：
+bit[15:12]=preem,取值范围0x0~0xf
+bit[9:8]=voltage,取值范围0x0~0x3
+优先调节preem,预期可以cover掉各lane负载不均衡的问题，
+如果仍然调不好，再考虑调voltage.
+T982命令
+echo ra c8 >/sys/class/aml_lcd/lcd0/reg   读当前C8寄存器指令
+echo wa c8 0x2602f602 >/sys/class/aml_lcd/lcd0/reg  写C8当前指令",,,"echo 0xf 0x1 >/sys/class/lcd/phy //wirte swing and emphsis.
+cat >/sys/class/lcd/phy //read current settings.
+
+注释：
+0xf--->swing,range:0x0~0xf
+0x1--->emphsis,range:0~6
+
+echo 0xf 0x1 
+
+0xf   :幅度
+0x1：预加重",,,,,"屏的展频  ，先读后写：
+cat /sys/class/aml_lcd/lcd0/ss;
+echo level xx >/sys/class/aml_lcd/lcd0/ss; xx取值0~60"
+,改预加重和幅度,,,,,,,,,"整体调：
+cat?/sys/class/lcd/phy---读
+echo?5?2?>/sys/class/lcd/phy---写
+5是幅度swing，2是预加重pre_emphasize。例如：swing?改为5，pre_emphasize??改为2??（幅度是0～f，预加重是0～6或5）",,"echo 1 1 0 0 >/sys/class/lcd/lvds
+echo 3 1 >/sys/class/lcd/phy
+#3是幅度，1是预加重#",,,,,"调相位指令
+如果要查询，指令是  cat /sys/class/aml_lcd/lcd0/mlvds
+echo phase 0x0660 >/sys/class/aml_lcd/lcd0/mlvds",,
+,更改VCM电压,,,,,,,"echo WordW,0x111E,0x39,0x0060,0x0060 > /proc/utopia_mdb/riuinfo
+0x111E_0x39[6:5]，00=1.2V,01=0.9V,10=0.8V,11=0.6V",,,,,,,,,,,
+,更换屏参文件,,,,,,,,,"su
+mount?-o?rw,remount?/odm
+echo?0?>?/proc/sys/kernel/printk
+cd?odm/panel/CSOT-ST4251B05-3 ---CSOT-ST4251B05-3是ini文件名称，需要和小米软件确认
+busybox?vi?mlvds_fhd.ini
+{输入“a”或者“i”可以更改ini文件（注：输入a后不需要按enter键）更改完后，要退出来，需要按键盘的esc；
+需要保存：
+输入冒号：，再输入字母wq；按enter键；
+不需要保存：
+不保存是输入冒号：，再输入字母q！；按enter键；}
+sync
+reboot",,,,,,,"更换配屏 屏参（uboot）：
+setenv model_name FHD_HV430FHB-F94
+saveenv
+reboot
+
+查看当前配屏（uboot）：
+model_list",,
+最小系统,CPU调试,"调电压，频率
+cd /sys/devices/system/cpu/cpufreq/policy0
+echo 1450000 > scaling_max_freq
+echo 1450000 > scaling_min_freq
+-----------0.9V--------------------
+echo 750000 > scaling_max_freq
+echo 750000 > scaling_min_freq
+------------1.2V-------------------
+echo 1500000 > scaling_max_freq
+echo 1500000 > scaling_min_freq
+
+返回查看CPU参数
+cat /proc/mstar_dvfs/voltage
+cat /proc/mstar_dvfs/frequency",,,,,,,,,,"设CPU频率：echo 1512000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+设CPU测试：echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+查CPU频率：cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
+设置定时最高频率：
+while true; do cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq;input keyevent 1 ;cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq;sleep 4 ;done
+定时抓频率：
+while true; do cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq;input keyevent 1 ;cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq;sleep 4 ;done
+输出白场：echo 0xff 0xff 0xff >/sys/class/amvecm/gamma_pattern
+
+Cs0极限频率：setenv preboot ""ddr_test_cmd 0x12 0x20000000;run factory_reset_poweroff_protect;run upgrade_check;run init_display;run storeargs;run  switch_bootmode;"";save;ddr_test_cmd 0x1c 0x8000000 696 1500 1
+Cs1极限频率：setenv preboot ""ddr_test_cmd 0x12 0x40000000;mw 0xc88364dc 0x000010001;run factory_reset_poweroff_protect;run upgrade_check;run init_display;run storeargs;run switch_bootmode;"";save;ddr_test_cmd 0x1c 0x8000000 696 1500 1
+清设置：defenv;save;reset",,,,,,"DVFS table；
+cat /proc/aml_cpufreq/policy0/opp-table",
+,关闭动态调压指令,,,,,,,"1. ac DVFS_MEASURE enable
+2. ac loglevel 7
+3. setenv close_log no
+4. saveenv
+5. reset",,,,,,,,,,,
+,GPIO调试（uboot）,,,,,,,,,,,"（1）置高GPIO：gpio s GPIOH_3
+（2）置低GPIO：gpio c GPIOH_3
+（3）读GPIO：gpio i GPIOH_3
+（4）翻转GPIO：gpio t GPIOAO_4
+（5）读ADC：saradc open 3;saradc getval，注意读某个sar口的操作
+（6）测试SPI：run init_display
+（7）在uboot下读取GPIO口值：gpio status -a",,,,,,,
+音频,功放寄存器读取,,,,,,,,,,,cat?/sys/class/tas5805m-0x2c/0-002c/amp_dump,,,,,,,
+,关音效,"查看NR参数
+cat /vendor/cusdata/bsp/chip/aq/BasicSound_CVBS.ini",,"su
+#DIASBEL：
+echo write_reg=0x950792[0x8000]=0x8000 > /sys/devices/platform/mtk-tv-offload-platform/mtk_dbg/utopia_mdb
+#ENABLE
+echo write_reg=0x950792[0x8000]=0x0000 > /sys/devices/platform/mtk-tv-offload-platform/mtk_dbg/utopia_mdb
+
+小米   
+  进入工厂菜单关闭（隐藏菜单）EQ
+小米海外
+su???
+echo?main?0?>?/sys/class/xiaomi-speaker/eq_enable
+echo?main?0?>?/sys/class/xiaomi-speaker/drc_enable
+echo?main?0?>?/sys/class/xiaomi-speaker/drb_enable???
+echo?write_reg=0x112D20[0xffff]=0x0200>?/proc/utopia_mdb/audio
+echo?write_reg=0x160392[0x8000]=0x8000>?/proc/utopia_mdb/audio
+
+Sound---System sounds（连续按确认键）-----下方会出现隐藏菜单----{Codec EQ}---选择关闭
+
+整机方式：Settings >> Device Preferences >> About >> Android TV OS build
+串口方式:getprop |grep incremental
+
+小米的海外的都可以用工厂菜单去关闭
+
+设置—声音—volume?leveler?
+找到volume?leveler后按七八下右键会弹出来工厂菜单，里面把EQ关掉就好了
+
+小米关音效的方法
+su
+setenforce 0
+echo 0 > /sys/class/xiaomi-speaker/eq_enable
+echo 0 > /sys/class/xiaomi-speaker/drc_enable
+echo write_reg=0x950792[0x8000]=0x0000 > /sys/devices/platform/mtk-tv-offload-platform/mtk_dbg/utopia_mdb",,,,,,,,"关闭音效：
+tinymix 26 0",,,,,"关闭功放EQ 的命令:
+echo 0 > /sys/class/xiaomi-speaker/eq_enable
+echo 0 > /sys/class/xiaomi-speaker/drc_enable",,
+EMMC,EMMC寿命,,,,,,,,,,,EMMC life：cat /sys/class/block/mmcblk0/device/life_time,,,,,,,
+,查EMMC展频,,,"调整展频参数：
+SS调整
+//讀ssc
+su
+cat /sys/devices/platform/mediatek-drm-tv-kms/mtk_dbg/ssc
+//設ssc
+echo [ssc_en] [modulation] [deviation] > /sys/devices/platform/mediatek-drm-tv-kms/mtk_dbg/ssc",,,,"echo dump,0x123f > /proc/utopia_mdb/riuinfo",,,,,,,,,,,
+DDR,查DDR展频,,,,,,,"echo dump,0x110D > /proc/utopia_mdb/riuinfo",,,"T982 SSC kernel node operation
+channel 0 fe0a0008和channel 1 fe0a2008
+
+关展频，把reg[0xxxxxxx] bit8=0；
+echo 0xxxxxxx 0x00100020 >/sys/kernel/debug/aml_reg/paddr
+
+开展频1000ppm
+echo 0xxxxxxx 0x0100120 >/sys/kernel/debug/aml_reg/paddr
+
+开展频2000ppm
+echo 0xxxxxxx 0x0100140 >/sys/kernel/debug/aml_reg/paddr
+
+开展频3000ppm
+echo 0xxxxxxx 0x0100160 >/sys/kernel/debug/aml_reg/paddr
+
+开展频5000ppm
+echo 0xxxxxxx 0x01001a0 >/sys/kernel/debug/aml_reg/paddr","（1）查DDR展频：echo 0xff637010 10 >/sys/kernel/debug/aml_reg/dump;cat /sys/kernel/debug/aml_reg/dump
+（2）关DDR展频：echo ff637010 0x0028103 >/sys/kernel/debug/aml_reg/paddr
+（3）1000ppm：echo ff637010 0x0128103 >/sys/kernel/debug/aml_reg/paddr
+（4）2000ppm：echo ff637010 0x0148103 >/sys/kernel/debug/aml_reg/paddr
+（5）3000ppm：echo ff637010 0x0168103 >/sys/kernel/debug/aml_reg/paddr
+（6）4000ppm：echo ff637010 0x0188103 >/sys/kernel/debug/aml_reg/paddr
+（7）5000ppm：echo ff637010 0x01A8103 >/sys/kernel/debug/aml_reg/paddr
+（8）6000ppm：echo ff637010 0x01c8103 >/sys/kernel/debug/aml_reg/paddr",,,"972查DDR展频
+Uboot下：
+md ff638c00
+
+主要是看后两位，c = 12，,12*500 = 6000ppm
+（1）设置6000ppm
+mw ff638c08 001001c0;save
+（2）设置8000ppm
+mw ff638c08 001001f0;save
+（3）每设置完一次展频，然后输入如下指令
+ddr_auto_fast_boot_check 6;run storeboot
+如果上述指令不行，改用run bootcmd
+
+（3）DDR查展频（uboot）：md ff638c00
+（4）DDR展频更改（6000ppm）：mw ff638c08 001001c0;save
+（5）DDR展频更改（8000ppm）：mw ff638c08 001001f0;save","962查DDR展频
+1）查DDR展频：echo c8837000 10 >/sys/kernel/debug/aml_reg/dump;cat /sys/kernel/debug/aml_reg/dump
+2）1000ppm：setenv ddr_pll_ssc_ppm_1000 ""mwm 0xc8837004 0x00040000 0xfffbffff;mwm 0xc883700c 0x00000020 0xffffffdf;mwm 0xc8837010 0x00008000 0xffff73ff;mwm 0xc8837010 0x00120000 0xffe0ffff;"";setenv bootcmd 'run ddr_pll_ssc_ppm_1000;run storeboot';save
+3）2000ppm：setenv ddr_pll_ssc_ppm_2000 ""mwm 0xc8837004 0x00040000 0xfffbffff;mwm 0xc883700c 0x00000020 0xffffffdf;mwm 0xc8837010 0x00008000 0xffff73ff;mwm 0xc8837010 0x00140000 0xffe0ffff;"";setenv bootcmd 'run ddr_pll_ssc_ppm_2000;run storeboot';save
+4）3000ppm：setenv ddr_pll_ssc_ppm_3000 ""mwm 0xc8837004 0x00040000 0xfffbffff;mwm 0xc883700c 0x00000020 0xffffffdf;mwm 0xc8837010 0x00008000 0xffff73ff;mwm 0xc8837010 0x00160000 0xffe0ffff;"";setenv bootcmd 'run ddr_pll_ssc_ppm_3000;run storeboot';save
+5）4000ppm：setenv ddr_pll_ssc_ppm_4000 ""mwm 0xc8837004 0x00040000 0xfffbffff;mwm 0xc883700c 0x00000020 0xffffffdf;mwm 0xc8837010 0x00008000 0xffff73ff;mwm 0xc8837010 0x00180000 0xffe0ffff;"";setenv bootcmd 'run ddr_pll_ssc_ppm_4000;run storeboot';save
+6）5000ppm：setenv ddr_pll_ssc_ppm_5000 ""mwm 0xc8837004 0x00040000 0xfffbffff;mwm 0xc883700c 0x00000020 0xffffffdf;mwm 0xc8837010 0x00008000 0xffff73ff;mwm 0xc8837010 0x001a0000 0xffe0ffff;"";setenv bootcmd 'run ddr_pll_ssc_ppm_5000;run storeboot';save
+7）6000ppm：setenv ddr_pll_ssc_ppm_6000 ""mwm 0xc8837004 0x00040000 0xfffbffff;mwm 0xc883700c 0x00000020 0xffffffdf;mwm 0xc8837010 0x00008000 0xffff73ff;mwm 0xc8837010 0x001c0000 0xffe0ffff;"";setenv bootcmd 'run ddr_pll_ssc_ppm_6000;run storeboot';save","1）查DDR展频：echo ff637000 10 >/sys/kernel/debug/aml_reg/dump;cat /sys/kernel/debug/aml_reg/dump
+2）1000ppm：setenv ddr_pll_ssc_ppm_1000 ""mwm 0xff637004 0x00040000 0xfffbffff;mwm 0xff63700c 0x00000020 0xffffffdf;mwm 0xff637010 0x00008000 0xffff73ff;mwm 0xff637010 0x00120000 0xffe0ffff;"";setenv bootcmd 'run ddr_pll_ssc_ppm_1000;run storeboot';save;reset
+3）2000ppm：setenv ddr_pll_ssc_ppm_2000 ""mwm 0xff637004 0x00040000 0xfffbffff;mwm 0xff63700c 0x00000020 0xffffffdf;mwm 0xff637010 0x00008000 0xffff73ff;mwm 0xff637010 0x00140000 0xffe0ffff;"";setenv bootcmd 'run ddr_pll_ssc_ppm_2000;run storeboot';save;reset
+4）3000ppm：setenv ddr_pll_ssc_ppm_3000 ""mwm 0xff637004 0x00040000 0xfffbffff;mwm 0xff63700c 0x00000020 0xffffffdf;mwm 0xff637010 0x00008000 0xffff73ff;mwm 0xff637010 0x00160000 0xffe0ffff;"";setenv bootcmd 'run ddr_pll_ssc_ppm_3000;run storeboot';save;reset
+5）T950_rank0 windows：setenv bootcmd  ""ddr_test_cmd 0x12 0x10000000;ddr_test_cmd 0x22 a 0 0x800000 18 0x0 0x8000000 "";setenv env_ddrtest_data_lane  0x22;save;d2pll 792
+6）T950_rank1 windows：setenv bootcmd  ""ddr_test_cmd 0x12 0x40000000;mw 0xff6364dc 0x000010001;ddr_test_cmd 0x22 a 0 0x900000 18 0 0x8000000"";setenv env_ddrtest_data_lane  0x22;save;d2pll 792",,
+测试,读取IIC设备及数据操作,,,,,,,,,,,"i2cget -f -y 4 0x74 0x02
+查IIC速率：
+uboot下：
+1，fdt addr $dtb_mem_addr
+2，fdt print
+（1）查IIC设备：i2cdetect -l
+（2）查设备地址：i2cdetect -y -r 2
+（3）查寄存器值：i2cdump -f -y 2 0x20
+（4）读寄存器值：i2cget -f -y 2 0x20 0x15
+（5）写寄存器值：i2cset -f -y 2 0x20 0x15 0x16",,,,,,,
+,测USB2.0眼图,,,,,,,,,,,"T920L测试USB眼图用这个命令吧，你试下（要开完机后在输命令！！）：
+
+echo ff500414 40000000 > /sys/kernel/debug/aml_reg/paddr 
+echo ff500424 40000000 > /sys/kernel/debug/aml_reg/paddr 
+echo ff500434 40000000 > /sys/kernel/debug/aml_reg/paddr 
+echo ff500444 40000000 > /sys/kernel/debug/aml_reg/paddr 
+echo ff500454 40000000 > /sys/kernel/debug/aml_reg/paddr",,"T950Z4DT.PB791测USB眼图
+拆掉 WIFI模块
+
+对USB插入U盘-串口会打印一个 【USB】1-1
+A=1  B=2 
+因此该端口为：（脚本使用S5）
+./usb_comp-S5 4 A A
+
+测试升级用的USB接口需要在 uboot 下输入
+idme dev_flags 0
+
+下端口号为：【USB】2-1
+./usb_comp-S5 4 B A",,,,,
+,查网口指令,,,,,,,,,,,ifconfig eth0,,,,,,,
+通用,改读写权限,,,settings->system->About->找到Android TV OS build，光标移动到这一项，连续按确定键打开开发者权限> 返回system > developer options > USB debugging关掉，重启即可识别USB,,,,,,,,"mount -o remount,rw /system
+#需要先获取root权限后在输入如上指令#",,,,,,,
+,复制文件到另外路径,,,,,,,,,,,"cp /storage/udisk0/lowmem_manage.sh /system/bin/
+#cp /当前路径 /到另外一个路径#",,,,,,,
+,debug系统开U盘读写,,,settings->system->About->找到Android TV OS build，光标移动到这一项，连续按确定键打开开发者权限> 返回system > developer options > USB debugging关掉，重启即可识别USB,,,,,,,,,,"退出USB调试模式写“0”，进入调试模式改”1“
+idme dev_flags 0
+setenv otg_device 0;
+Saveenv
+reboot
+",,,"退出USB调试模式，进入调试模式改”1“
+setenv otg_device 0;
+Saveenv
+reboot",,
+其他,进shell模式,,,,,,,,,,,,,,,,,,"1、Tizen设置NT72691方法，F2工厂菜单->Control->Sub Option->切换成debug，log可以不用设置，同时，20089999回车98回车，进shell模式
+20102011
+20089999? ??（上下两串可以放在一行输入）
+菜单选择 -》?98
+2、NT72690
+shift+#，回车"
+,解决ESD问题AV误触发增加的延时检测,,,,,,,,,,,echo 10 > /sys/module/tvin_avin_detect/parameters/avin_count_times  此处的10是1000ms；,,,,,,,
+,关闭屏保,,,settings put system  screen_off_timeout 2147483647,,,,：settings put system  screen_off_timeout 2147483647,,,,,,,,,,,
+,查看占空比,,,,,,,,,,,,,,,,"su
+cat /sys/class/aml_bl/bl0/pwm",,
