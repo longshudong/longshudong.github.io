@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MI软件指令速查</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f0f3f8;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.2);
+            padding: 32px 36px;
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 500;
+            color: #1a2b3c;
+            margin-bottom: 30px;
+        }
+        .select-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .select-group {
+            flex: 1 1 280px;
+        }
+        .select-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #4f6e90;
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+        select {
+            width: 100%;
+            padding: 16px 22px;
+            font-size: 1rem;
+            border: 2px solid #d0deef;
+            border-radius: 40px;
+            background-color: #f9fcff;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23395e7e" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 22px center;
+            cursor: pointer;
+            outline: none;
+            transition: 0.2s;
+            color: #1f3142;
+            font-weight: 450;
+        }
+        select:hover {
+            border-color: #8ba2c2;
+            background-color: #f0f7ff;
+        }
+        select:focus {
+            border-color: #1f4977;
+            box-shadow: 0 0 0 3px rgba(31,73,119,0.1);
+        }
+        .result-area {
+            background: #f5faff;
+            border-radius: 24px;
+            padding: 24px;
+            min-height: 240px;
+            border: 1px solid #d7e2f1;
+        }
+        .placeholder-msg, .no-command-msg {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: #859fb9;
+            min-height: 200px;
+            font-size: 1.1rem;
+        }
+        .no-command-msg {
+            color: #b13e3e;
+        }
+        .command-block {
+            background: white;
+            border-radius: 20px;
+            padding: 24px 28px;
+            border-left: 6px solid #1f4977;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.03);
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #003366;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>MI软件指令速查</h1>
+
+    <div class="select-row">
+        <div class="select-group">
+            <label>芯片型号</label>
+            <select id="chipSelect">
+                <!-- 将在JS中填充 -->
+            </select>
+        </div>
+        <div class="select-group">
+            <label>指令功能</label>
+            <select id="funcSelect">
+                <!-- 将在JS中填充 -->
+            </select>
+        </div>
+    </div>
+
+    <div class="result-area" id="resultArea">
+        <div class="placeholder-msg" id="placeholderMsg">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#859fb9" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+            <span>请选择芯片型号与指令功能</span>
+        </div>
+        <div class="no-command-msg" id="noCommandMsg" style="display: none;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b13e3e" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="#b13e3e" stroke="none"/></svg>
+            <span>无指令</span>
+        </div>
+        <div id="commandDisplay" style="display: none;"></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // 芯片列表
+        const chipList = [
+            "MT9216", "MT9612", "MT9603", "MT9026", "MT9638", "MT9653", "MT5510",
+            "T963", "T963S", "T982", "T920", "T950X4", "T950Z4D", "T972", "T962",
+            "T950D5", "T966D5", "NTK"
+        ];
+
+        // 功能列表
+        const functionList = [
+            "关机", "重启", "退工厂模式/进用户模式", "开串口", "变更log打印等级", "关打印",
+            "查系统版本", "查软件版本", "设置上电自动开机/待机", "没有panel tag（屏标），写屏参",
+            "清环境", "删除mn", "查tag", "切Region ID", "刷 APK", "如何查PID", "温控策略",
+            "核温指令", "核温周期连读读指令", "查VBO展频", "开展频指令", "改预加重和幅度",
+            "更改VCM电压", "更换屏参文件", "CPU调试", "关闭动态调压指令", "GPIO调试（uboot）",
+            "功放寄存器读取", "关音效", "EMMC寿命", "查EMMC展频", "查DDR展频",
+            "读取IIC设备及数据操作", "测USB2.0眼图", "查网口指令", "改读写权限",
+            "复制文件到另外路径", "debug系统开U盘读写", "进shell模式",
+            "解决ESD问题AV误触发增加的延时检测", "关闭屏保", "查看占空比"
+        ];
+
+        // 指令映射表
+        const cmdMap = {
+            // 关机
+            'T920|关机': 'poweroff',
+            
+            // 重启
+            'MT9603|重启': 'reboot',
+            'MT9653|重启': 'reboot',
+            'T920|重启': 'reboot',
+            'T966D5|重启': '关闭自动重启：\nsu\nsetprop persist.sys.disable_rescue true',
+            
+            // 退工厂/进用户模式
+            'MT9216|退工厂模式/进用户模式': '1、CMD工具发送1230指令可以退\n2、正常开机，输入如下指令：\nsu\nswitchtouser;echo $?\n重启',
+            'MT9603|退工厂模式/进用户模式': '【退老化、切用户指令】\nsu\nfactmessager -des\n1230\n1229',
+            'MT9638|退工厂模式/进用户模式': 'Kernel模式下：\nswitchtouser;echo $?',
+            'MT9653|退工厂模式/进用户模式': '进入用户模式：\nsu\nswitchtouser;echo $?',
+            'T963|退工厂模式/进用户模式': '切用户方式：\n（1）使用AT测试脚本，先执行退老化的操作，再执行切用户的命令\n（2）使用CCM工具，先发送1481退老化，再发送1230切用户\n（3）使用串口指令：\nsu\nswitchtouser;\nreboot',
+            'T963S|退工厂模式/进用户模式': 'su;\nswitchtouser',
+            'T920|退工厂模式/进用户模式': '切用户\nsu;\nswitchtouser',
+            'T950X4|退工厂模式/进用户模式': 'su\nam broadcast -a com.duokan.command.fake -e commandid 1230\nreboot',
+            'T972|退工厂模式/进用户模式': '退工厂\nidme bootmode 1\nidme dev_flags 0',
+            'T950D5|退工厂模式/进用户模式': '升级完\n断上电\n输入指令\nsu\nswitchtouser\n重启',
+            'T966D5|退工厂模式/进用户模式': '升级完\n断上电\n输入指令\nsu\nswitchtouser\n重启',
+            
+            // 开串口
+            'MT9216|开串口': 'mboot下敲\nprintenv\nsetenv close_log no\nsetenv dbgLevel DEBUG\nsave\nreset\n\nmboot下敲\nsetenv UARTOnOff on\nsetenv close_log no\nsave\nac loglevel 7\nreset',
+            'MT9612|开串口': '开串口：\n进入uboot下敲如下指令：\nsetenv console_enable 1\nsaveenv\nreset\n\nuser版本开启串口权限方法：\nmboot下输入：\nsetenv UARTOnOff on\nsave\nac loglevel 0\nac androidboot.console_enable miroot\nsaveenv\nreset',
+            'MT9603|开串口': '关闭串口：112233',
+            'MT9026|开串口': '按着回车上电进入boot\nidme fos_flags 1a7',
+            'MT9638|开串口': '9638 开串口操作：\nsetenv UARTOnOff on\nsaveenv\nreset',
+            'T963|开串口': 'T963开串口：\nuboot下输入\nfactorydata write console_enable 1;\nsaveenv;\nreboot;',
+            'T963S|开串口': 'Uboot下:\nfactorydata write console_enable 1\nreboot',
+            'T950D5|开串口': '开串口打印权限：\nfactorydata write console_enable 1\n调串口打印等级：\nfactorydata write log_level 7',
+            
+            // 变更log打印等级
+            'MT9603|变更log打印等级': '用户模式下\nsu\necho 7 > /proc/sys/kernel/printk \nlogcat',
+            'MT9653|变更log打印等级': 'ac loglevel 7\nsaveenv\nreset',
+            'T963|变更log打印等级': 'echo 7 > /proc/sys/kernel/printk（开机后#权限下使用）\nsetenv initargs ${initargs} loglevel=7;save（备注：7是开到最大，0是关闭）',
+            'T963S|变更log打印等级': 'Uboot下：\nfactorydata write log_level 8---最高\nfactorydata write log_level 0---最低',
+            'T920|变更log打印等级': 'echo 7 > /proc/sys/kernel/printk\n#7代表开权限最大#',
+            'T950X4|变更log打印等级': 'setenv kloglevel 7;save（备注：7是开到最大）',
+            'T950D5|变更log打印等级': '开串口打印权限：\nfactorydata write console_enable 1\n调串口打印等级：\nfactorydata write log_level 7',
+            
+            // 关打印
+            'MT9216|关打印': '关闭kernel log\ndmesg -n 7\n查看muteflag\ndmesg -C; echo get all > /sys/ke[ACFG_NFX_AR] timeout\n解除mute\necho WordW1,0X1310,0X19,0,1> /proc/utopia_mddb/riuinfo',
+            'T920|关打印': 'echo 0 > /proc/sys/kernel/printk',
+            'T950X4|关打印': '关打印\nsu\necho 0 > /proc/sys/kernel/printk',
+            'T972|关打印': '方法一：dmesg   -n1\n方法二：echo 0 > /proc/sys/kernel/printk',
+            'T966D5|关打印': '按照Ctrl，连续按两次 P。 （第一Ctrl+p和第二个，关闭打印的等级不同）按一下ctrl+P，是关闭打印，按住ctrl同时再按一下p恢复打印。',
+            
+            // 查软件版本
+            'MT9653|查软件版本': '开机 主页面：Settings >> Device Preferences >> About >> Android TV OS build',
+            'T963|查软件版本': '开机后su看软件版本\ngetprop |grep incremental',
+            'T963S|查软件版本': '用户模式：\ngetprop |grep incremental',
+            'T920|查软件版本': 'getprop |grep incremental',
+            'T950D5|查软件版本': '查询软件版本更新的时间：\ngetprop ro.vendor.build.date',
+            
+            // 设置上电自动开机/待机
+            'MT9216|设置上电自动开机/待机': '上电开机:\n在mboot下敲\nsetenv factory_poweron_mode direct\nsaveenv\n硬开关机\n\n上电进待机：\n在mboot下敲\nsetenv factory_poweron_mode secondary\nsaveenv\n硬开关机',
+            'MT9612|设置上电自动开机/待机': '设置上电待机：\n开机长按回车键进mboot下敲\nsetenv factory_poweron_mode secondary\nsaveenv\n\n上电开机：在mboot下敲\nsetenv factory_poweron_mode direct\nsaveenv\nreset',
+            'MT9603|设置上电自动开机/待机': 'mboot模式下输入：\n\n上电开机：\nuenvset force_poweron_mode direct\nuenvsave\nreset\n上电待机：\nuenvset force_poweron_mode secondary\nuenvsave\nreset',
+            'T963|设置上电自动开机/待机': '设置上电待机的方式：\nuboot下输入指令：\nfactorydata write factory_power_mode secondary\n\n设置上电开机的方式：\nuboot下输入指令：\nfactorydata write factory_power_mode direct',
+            'T920|设置上电自动开机/待机': '小米上电开机\n上电开机：setenv factory_poweron_mode direct;keyman write factory_power_mode str test;saveenv\n上电待机：setenv factory_poweron_mode secondary;keyman write factory_power_mode str secondary;saveenv',
+            'T950D5|设置上电自动开机/待机': '设置上电待机：\n开机长按回车键进mboot下敲\nsetenv factory_poweron_mode secondary\nsaveenv\n\n上电开机：在mboot下敲\nsetenv factory_poweron_mode direct\nsaveenv\nreset',
+            'T966D5|设置上电自动开机/待机': '(1)设置上电开机\nfactorydata write factory_power_mode direct;\n(2)设置上电待机\nfactorydata write factory_power_mode secondary;\n\nbootloader\n开机进待机:factorydata write factory_power_mode secondary\n开机启动: factorydata write factory_power_mode direct\n\n确认上电状态：\nfactorydata dump',
+            
+            // 没有panel tag（屏标），写屏参
+            'MT9216|没有panel tag（屏标），写屏参': '9216切机型：\n1.mboot下敲detect_id\n2.printenv\n3.cleanallenv\n4.reset',
+            'MT9612|没有panel tag（屏标），写屏参': '9612切机型：\n1、开机长按Enter键进入mboot\n2、setenv force_panel_type 0x0D\n3、save\n4、reset',
+            'MT9603|没有panel tag（屏标），写屏参': 'MT9603切机型方法：\nmboot下\nsetenv force_panel_id 0x03\nsave\nreset',
+            'T963|没有panel tag（屏标），写屏参': 'uboot下\nfactorydata write assm_mn dz3n---dz3n是机型\nsaveenv\nreboot\n\n若整机没有画面，需要切屏参：\nuboot下输入\nfactorydata write assm_mn ""\nsaveenv\nreset\n\n重新上电开机：\nUboot下输入：\nfactorydata write assm_mn RZ9N\nsaveenv\nreboot\n\n清除tag：\nUboot下：\nsetenv fixtag ""\nsaveenv\nreboot\n\n写tag：\nuboot下输入\nsetenv fixtag 36\nsaveenv;\nreset',
+            'T950D5|没有panel tag（屏标），写屏参': '【点屏指令】\nHV320WHB-F56点屏切屏参：\n按住enter上电在mboot模式下输入如下指令：\n1.setenv model_name HD_HV320WHB-F56\n2.saveenv\n3.reboot\n\nST3151A07-5点屏切屏参：\n按住enter上电在mboot模式下输入如下指令：\n1.setenv model_name HD_ST3151A07-5\n2.saveenv\n3.reboot\n\nHV430FHB-F94点屏切屏参：\n按住enter上电在mboot模式下输入如下指令：\n1.setenv model_name FHD_HV430FHB-F94\n2.saveenv\n3.reboot',
+            'T966D5|没有panel tag（屏标），写屏参': 'Uboot下输入：(xx为屏参后2位)\nsetenv fixtag xx\nsaveenv\nreboot\n\n查所有屏参\nmodel_list',
+            
+            // 清环境
+            'MT9216|清环境': 'mboot下敲\ncleanallenv\nreset',
+            'MT9612|清环境': 'mboot下敲下命令\nprintenv\ncleanallenv\nreset\n\n再上电Mboot下敲\nprintenv\n确认一下环境是否已被清除了',
+            'MT9603|清环境': '清MT9603的配置环境\n在Mboot下敲如下指令\nenv default -a\nreset',
+            
+            // 查tag
+            'MT9216|查tag': 'Mboot下：\nprintenv',
+            'MT9612|查tag': 'Mboot下：\nprintenv',
+            'MT9603|查tag': 'Mboot下：\nprintenv',
+            'MT9638|查tag': 'Mboot下：\nprintenv',
+            'T963|查tag': 'mboot下看屏参\nprintenv',
+            
+            // 切Region ID
+            'MT9216|切Region ID': '部分板卡升级后，必须要烧入软件区域定义，小米方案切换地区方法如下：\n首先需要升级，升级完成后（不要进区域选择界面）输入如下命令（不需要在mboot下）\nsu\nmount -o rw,remount /\nsetenforce 0\nsetprop mitv.factory.region in\nsync\nreboot\n（in代表印度，sa代表南美，la代表拉美）',
+            'MT9603|切Region ID': '查Region\ngetprop | grep region\n\n写Region\nsetprop mitv.factory.region tw\nreboot\n\ndebug版本，串口下应该是可以用这个指令的吧：\nsu\nsetprop mitv.factory.region la\nsync\nreboot',
+            'T950D5|切Region ID': '切region:\n\n烧录debug版本，执行如下命令\n\nsu\n\ncd /sys/class/unifykeys/\necho "region" > name\necho "xx" > write\n\n(注意：xx对应的国家代码，印度是in，欧洲eu，台湾tw)\n\nreboot',
+            
+            // 如何查PID
+            'MT9216|如何查PID': 'Mboot下：\nprintenv',
+            'MT9612|如何查PID': 'Mboot下：\nprintenv',
+            'MT9603|如何查PID': 'Mboot下：\nprintenv',
+            'MT9638|如何查PID': 'Mboot下：\nprintenv',
+            'MT5510|如何查PID': 'su\ncat vendor/project_id/project_id.ini',
+            'T963|如何查PID': 'mboot下看屏参\nprintenv',
+            'T963S|如何查PID': 'Uboot下：\nprintenv',
+            
+            // 核温指令
+            'MT9216|核温指令': '读取核温：\ncat /proc/mstar_dvfs/temperature',
+            'MT9603|核温指令': 'MT9603重载温升测试\n1、输入 setenforce 0\n2、输入 getenforce 看返回值是否为 Permissive\n3、输入 /data/user/0/com.xiaomi.saber/files/eatcpu -percent 0.85 &\n4、输入 ps -ef|grep eatcpu 查看是否已经拉载起来（如进程15487所示）',
+            'MT5510|核温指令': 'xu 7411;cli;cd ptp;t\n#5510方案公版平台#',
+            'T963|核温指令': '1.echo disabled > /sys/class/thermal/thermal_zone0/mode     ---关温控\n2.cat /sys/class/thermal/thermal_zone0/mode     ---查温控\n3.cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq   ---查频率\n4.cat /sys/class/thermal/thermal_zone0/temp;      ---查核温\nwhile true;do cat /sys/class/thermal/thermal_zone0/temp;sleep 1;done  --持续打印温度 Ctrl+C退出\n\n5.重载指令\necho disabled > /sys/class/thermal/thermal_zone0/mode\necho performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor',
+            'T966D5|核温指令': 'cat /sys/devices/platform/soc/thermal/temperature',
+            
+            // 开展频指令
+            'T963|开展频指令': 'cat /sys/class/lcd/ssecho freq x >/sys/class/lcd/ss\n---改屏信号展频 echo level 5 >/sys/class/lcd/ss;（范围1~30；2000ppm/step，需要看屏规格书最大支持多少 ）查展频 cat /sys/class/lcd/ss以这个串口指令为准',
+            'T950D5|开展频指令': '屏的展频  ，先读后写：\ncat /sys/class/aml_lcd/lcd0/ss;\necho level xx >/sys/class/aml_lcd/lcd0/ss; xx取值0~60',
+            
+            // 改预加重和幅度
+            'T963|改预加重和幅度': '整体调：\ncat /sys/class/lcd/phy---读\necho 5 2 >/sys/class/lcd/phy---写\n5是幅度swing，2是预加重pre_emphasize。例如：swing 改为5，pre_emphasize  改为2  （幅度是0～f，预加重是0～6或5）',
+            
+            // 关音效
+            'MT9603|关音效': 'su\n#DIASBEL：\necho write_reg=0x950792[0x8000]=0x8000 > /sys/devices/platform/mtk-tv-offload-platform/mtk_dbg/utopia_mdb\n#ENABLE\necho write_reg=0x950792[0x8000]=0x0000 > /sys/devices/platform/mtk-tv-offload-platform/mtk_dbg/utopia_mdb',
+            'T920|关音效': 'tinymix 26 0',
+            'T950D5|关音效': '关闭功放EQ 的命令:\necho 0 > /sys/class/xiaomi-speaker/eq_enable\necho 0 > /sys/class/xiaomi-speaker/drc_enable',
+            
+            // 查DDR展频
+            'T920|查DDR展频': '（1）查DDR展频：echo 0xff637010 10 >/sys/kernel/debug/aml_reg/dump;cat /sys/kernel/debug/aml_reg/dump\n（2）关DDR展频：echo ff637010 0x0028103 >/sys/kernel/debug/aml_reg/paddr\n（3）1000ppm：echo ff637010 0x0128103 >/sys/kernel/debug/aml_reg/paddr\n（4）2000ppm：echo ff637010 0x0148103 >/sys/kernel/debug/aml_reg/paddr\n（5）3000ppm：echo ff637010 0x0168103 >/sys/kernel/debug/aml_reg/paddr\n（6）4000ppm：echo ff637010 0x0188103 >/sys/kernel/debug/aml_reg/paddr\n（7）5000ppm：echo ff637010 0x01A8103 >/sys/kernel/debug/aml_reg/paddr\n（8）6000ppm：echo ff637010 0x01c8103 >/sys/kernel/debug/aml_reg/paddr',
+            'T972|查DDR展频': '972查DDR展频\nUboot下：\nmd ff638c00\n\n主要是看后两位，c = 12，,12*500 = 6000ppm\n（1）设置6000ppm\nmw ff638c08 001001c0;save\n（2）设置8000ppm\nmw ff638c08 001001f0;save\n（3）每设置完一次展频，然后输入如下指令\nddr_auto_fast_boot_check 6;run storeboot\n如果上述指令不行，改用run bootcmd\n\n（3）DDR查展频（uboot）：md ff638c00\n（4）DDR展频更改（6000ppm）：mw ff638c08 001001c0;save\n（5）DDR展频更改（8000ppm）：mw ff638c08 001001f0;save',
+            
+            // 读取IIC设备及数据操作
+            'T920|读取IIC设备及数据操作': 'i2cget -f -y 4 0x74 0x02\n查IIC速率：\nuboot下：\n1，fdt addr $dtb_mem_addr\n2，fdt print\n（1）查IIC设备：i2cdetect -l\n（2）查设备地址：i2cdetect -y -r 2\n（3）查寄存器值：i2cdump -f -y 2 0x20\n（4）读寄存器值：i2cget -f -y 2 0x20 0x15\n（5）写寄存器值：i2cset -f -y 2 0x20 0x15 0x16',
+            
+            // 测USB2.0眼图
+            'T920|测USB2.0眼图': 'T920L测试USB眼图用这个命令吧，你试下（要开完机后在输命令！！）：\n\necho ff500414 40000000 > /sys/kernel/debug/aml_reg/paddr \necho ff500424 40000000 > /sys/kernel/debug/aml_reg/paddr \necho ff500434 40000000 > /sys/kernel/debug/aml_reg/paddr \necho ff500444 40000000 > /sys/kernel/debug/aml_reg/paddr \necho ff500454 40000000 > /sys/kernel/debug/aml_reg/paddr',
+            
+            // 查网口指令
+            'T920|查网口指令': 'ifconfig eth0',
+            
+            // 改读写权限
+            'T920|改读写权限': 'mount -o remount,rw /system\n#需要先获取root权限后在输入如上指令#',
+            
+            // 复制文件到另外路径
+            'T920|复制文件到另外路径': 'cp /storage/udisk0/lowmem_manage.sh /system/bin/\n#cp /当前路径 /到另外一个路径#',
+            
+            // debug系统开U盘读写
+            'T950X4|debug系统开U盘读写': '退出USB调试模式写“0”，进入调试模式改”1“\nidme dev_flags 0\nsetenv otg_device 0;\nSaveenv\nreboot',
+            'T950D5|debug系统开U盘读写': '退出USB调试模式，进入调试模式改”1“\nsetenv otg_device 0;\nSaveenv\nreboot',
+            
+            // 进shell模式
+            'NTK|进shell模式': '1、Tizen设置NT72691方法，F2工厂菜单->Control->Sub Option->切换成debug，log可以不用设置，同时，20089999回车98回车，进shell模式\n20102011\n20089999    （上下两串可以放在一行输入）\n菜单选择 -》 98\n2、NT72690\nshift+#，回车',
+            
+            // 解决ESD问题AV误触发增加的延时检测
+            'T920|解决ESD问题AV误触发增加的延时检测': 'echo 10 > /sys/module/tvin_avin_detect/parameters/avin_count_times  此处的10是1000ms；',
+            
+            // 关闭屏保
+            'MT9603|关闭屏保': 'settings put system  screen_off_timeout 2147483647',
+            'MT9653|关闭屏保': 'settings put system  screen_off_timeout 2147483647',
+            
+            // 查看占空比
+            'T962|查看占空比': 'su\ncat /sys/class/aml_bl/bl0/pwm'
+        };
+
+        // 获取元素
+        const chipSelect = document.getElementById('chipSelect');
+        const funcSelect = document.getElementById('funcSelect');
+        const placeholderMsg = document.getElementById('placeholderMsg');
+        const noCommandMsg = document.getElementById('noCommandMsg');
+        const commandDisplay = document.getElementById('commandDisplay');
+
+        // 填充下拉框
+        if (chipSelect) {
+            chipSelect.innerHTML = '';
+            chipList.forEach(chip => {
+                const option = document.createElement('option');
+                option.value = chip;
+                option.textContent = chip;
+                chipSelect.appendChild(option);
+            });
+        }
+
+        if (funcSelect) {
+            funcSelect.innerHTML = '';
+            functionList.forEach(func => {
+                const option = document.createElement('option');
+                option.value = func;
+                option.textContent = func;
+                funcSelect.appendChild(option);
+            });
+        }
+
+        // 更新显示的函数
+        function updateDisplay() {
+            if (!chipSelect || !funcSelect || !placeholderMsg || !noCommandMsg || !commandDisplay) return;
+            
+            const chip = chipSelect.value;
+            const func = funcSelect.value;
+            const key = chip + '|' + func;
+            const command = cmdMap[key];
+
+            // 隐藏所有显示元素
+            placeholderMsg.style.display = 'none';
+            noCommandMsg.style.display = 'none';
+            commandDisplay.style.display = 'none';
+
+            if (command) {
+                // 有指令：显示指令
+                commandDisplay.style.display = 'block';
+                commandDisplay.innerHTML = `
+                    <div class="command-block">
+                        <div style="white-space: pre-wrap;">${command.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+            } else {
+                // 无指令：显示"无指令"
+                noCommandMsg.style.display = 'flex';
+            }
+        }
+
+        // 绑定事件
+        if (chipSelect && funcSelect) {
+            chipSelect.addEventListener('change', updateDisplay);
+            funcSelect.addEventListener('change', updateDisplay);
+            updateDisplay();
+        }
+    })();
+</script>
+</body>
+</html>
