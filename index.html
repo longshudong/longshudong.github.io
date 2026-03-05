@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MI软件指令速查 · 自动同步版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f0f3f8;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.2);
+            padding: 32px 36px;
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 500;
+            color: #1a2b3c;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            background: #e1eaf2;
+            color: #1e405e;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-weight: 400;
+        }
+        .warning-note {
+            background: #fff8e5;
+            border: 1px solid #ffd966;
+            border-radius: 16px;
+            padding: 12px 20px;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+            color: #7d5d23;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .warning-note::before {
+            content: "⚠️";
+            font-size: 1.4rem;
+        }
+        .select-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .select-group {
+            flex: 1 1 280px;
+        }
+        .select-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #4f6e90;
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+        select {
+            width: 100%;
+            padding: 16px 22px;
+            font-size: 1rem;
+            border: 2px solid #d0deef;
+            border-radius: 40px;
+            background-color: #f9fcff;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23395e7e" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 22px center;
+            cursor: pointer;
+            outline: none;
+            transition: 0.2s;
+        }
+        select:hover {
+            border-color: #8ba2c2;
+            background-color: #f0f7ff;
+        }
+        select:focus {
+            border-color: #1f4977;
+            box-shadow: 0 0 0 3px rgba(31,73,119,0.1);
+        }
+        select:disabled {
+            background-color: #eef3f9;
+            border-color: #cbd6e5;
+            color: #7a8faa;
+            cursor: not-allowed;
+        }
+        .result-area {
+            background: #f5faff;
+            border-radius: 24px;
+            padding: 24px;
+            min-height: 240px;
+            border: 1px solid #d7e2f1;
+        }
+        .placeholder-msg, .no-command-msg, .loading-msg {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: #859fb9;
+            min-height: 200px;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        .no-command-msg {
+            color: #b13e3e;
+        }
+        .command-block {
+            background: white;
+            border-radius: 20px;
+            padding: 24px 28px;
+            border-left: 6px solid #1f4977;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.03);
+            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #003366;
+        }
+        .update-time {
+            text-align: right;
+            color: #708aaa;
+            font-size: 0.8rem;
+            margin-top: 12px;
+            font-style: italic;
+        }
+        .refresh-note {
+            text-align: left;
+            color: #4f6e90;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            background: #e9f0f9;
+            padding: 6px 16px;
+            border-radius: 40px;
+            display: inline-block;
+        }
+        .retry-btn {
+            background: #1f4977;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .retry-btn:hover {
+            background: #2e5a8c;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>
+        MI软件指令速查
+        <span class="status-badge" id="statusBadge">自动同步</span>
+    </h1>
+
+    <div class="warning-note">
+        同一个原厂的软件指令通常可以共用，特殊前馈需区分。输入错误可能导致板卡锁死，请仔细核对。
+    </div>
+
+    <div class="select-row">
+        <div class="select-group">
+            <label>芯片型号</label>
+            <select id="chipSelect" disabled>
+                <option value="">加载数据中...</option>
+            </select>
+        </div>
+        <div class="select-group">
+            <label>指令功能</label>
+            <select id="funcSelect" disabled>
+                <option value="">请先选择芯片型号</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="result-area" id="resultArea">
+        <div class="loading-msg" id="loadingMsg">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#859fb9" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10" stroke-dasharray="2 2"/>
+                <path d="M12 2 L12 6 M12 18 L12 22 M2 12 L6 12 M18 12 L22 12"/>
+            </svg>
+            <span>正在从GitHub加载数据...</span>
+        </div>
+        <div class="placeholder-msg" id="placeholderMsg" style="display: none;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#859fb9" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+            <span>请选择芯片型号与指令功能</span>
+        </div>
+        <div class="no-command-msg" id="noCommandMsg" style="display: none;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b13e3e" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="#b13e3e" stroke="none"/></svg>
+            <span>无指令</span>
+        </div>
+        <div id="commandDisplay" style="display: none;"></div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+        <div class="refresh-note" id="refreshNote">
+            ⚡ 每次更新CSV，GitHub自动转换，工具实时读取
+        </div>
+        <div class="update-time" id="updateTime"></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // GitHub Raw链接（指向自动生成的JSON文件）
+        const JSON_URL = 'https://raw.githubusercontent.com/longshudong/longshudong.github.io/refs/heads/main/mi_commands.json';
+
+        const chipSelect = document.getElementById('chipSelect');
+        const funcSelect = document.getElementById('funcSelect');
+        const loadingMsg = document.getElementById('loadingMsg');
+        const placeholderMsg = document.getElementById('placeholderMsg');
+        const noCommandMsg = document.getElementById('noCommandMsg');
+        const commandDisplay = document.getElementById('commandDisplay');
+        const updateTime = document.getElementById('updateTime');
+        const statusBadge = document.getElementById('statusBadge');
+
+        let commands = {};
+
+        async function loadData() {
+            try {
+                chipSelect.disabled = true;
+                funcSelect.disabled = true;
+                loadingMsg.style.display = 'flex';
+                placeholderMsg.style.display = 'none';
+                noCommandMsg.style.display = 'none';
+                commandDisplay.style.display = 'none';
+                statusBadge.textContent = '加载中...';
+
+                const response = await fetch(JSON_URL);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                commands = await response.json();
+                const chips = Object.keys(commands).sort();
+
+                chipSelect.innerHTML = '<option value="">请选择芯片型号</option>';
+                chips.forEach(chip => {
+                    const option = document.createElement('option');
+                    option.value = chip;
+                    option.textContent = chip;
+                    chipSelect.appendChild(option);
+                });
+
+                chipSelect.disabled = false;
+                chipSelect.value = '';
+                loadingMsg.style.display = 'none';
+                placeholderMsg.style.display = 'flex';
+                statusBadge.textContent = '已同步';
+                
+                const totalCmds = Object.values(commands).reduce((sum, funcs) => sum + Object.keys(funcs).length, 0);
+                updateTime.textContent = `共 ${totalCmds} 条指令 | ${chips.length} 个芯片型号`;
+
+            } catch (error) {
+                loadingMsg.style.display = 'none';
+                document.getElementById('errorMsg').style.display = 'flex';
+                document.getElementById('errorText').textContent = `加载失败: ${error.message}`;
+                statusBadge.textContent = '连接失败';
+            }
+        }
+
+        chipSelect.addEventListener('change', function() {
+            const chip = this.value;
+            funcSelect.innerHTML = '';
+            funcSelect.disabled = !chip;
+            
+            if (!chip) {
+                funcSelect.innerHTML = '<option value="">请先选择芯片型号</option>';
+                placeholderMsg.style.display = 'flex';
+                noCommandMsg.style.display = 'none';
+                commandDisplay.style.display = 'none';
+                return;
+            }
+            
+            const funcs = Object.keys(commands[chip] || {}).sort();
+            funcSelect.innerHTML = '<option value="">请选择指令功能</option>';
+            funcs.forEach(func => {
+                const option = document.createElement('option');
+                option.value = func;
+                option.textContent = func;
+                funcSelect.appendChild(option);
+            });
+            funcSelect.disabled = false;
+            placeholderMsg.style.display = 'flex';
+        });
+
+        funcSelect.addEventListener('change', function() {
+            const chip = chipSelect.value;
+            const func = this.value;
+            
+            if (!chip || !func) {
+                placeholderMsg.style.display = 'flex';
+                noCommandMsg.style.display = 'none';
+                commandDisplay.style.display = 'none';
+                return;
+            }
+            
+            const command = commands[chip]?.[func];
+            
+            placeholderMsg.style.display = 'none';
+            noCommandMsg.style.display = 'none';
+            commandDisplay.style.display = 'none';
+
+            if (command) {
+                commandDisplay.style.display = 'block';
+                commandDisplay.innerHTML = `
+                    <div class="command-block">
+                        <div style="white-space: pre-wrap;">${command.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+            } else {
+                noCommandMsg.style.display = 'flex';
+            }
+        });
+
+        document.getElementById('retryBtn')?.addEventListener('click', loadData);
+        loadData();
+    })();
+</script>
+</body>
+</html>
