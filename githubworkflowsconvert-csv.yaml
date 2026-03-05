@@ -1,0 +1,129 @@
+name: Convert CSV to JSON
+
+on:
+  push:
+    paths:
+      - '*.csv'
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Convert CSV to JSON
+        run: |
+          # 创建Python转换脚本
+          cat > convert.py << 'EOF'
+import csv
+import json
+import sys
+import os
+
+def clean_text(text):
+    """清理文本中的特殊字符"""
+    if not text:
+        return ""
+    # 移除BOM和不可见字符
+    text = text.replace('\ufeff', '').strip()
+    # 处理引号
+    if text.startswith('"') and text.endswith('"'):
+        text = text[1:-1]
+    text = text.replace('""', '"')
+    return text
+
+def csv_to_json(csv_file, json_file):
+    """将CSV转换为标准JSON格式"""
+    try:
+        with open(csv_file, 'r', encoding='utf-8-sig') as f:
+            reader = csv.reader(f)
+            rows = list(reader)
+        
+        if len(rows) < 2:
+            print(f"文件行数太少: {len(rows)}")
+            return False
+        
+        # 找到芯片型号所在行（通常是第2行）
+        chip_row = None
+        data_start_row = None
+        
+        for i, row in enumerate(rows):
+            row_str = ','.join(row)
+            if 'MT9216' in row_str or 'MT9612' in row_str:
+                chip_row = i
+                data_start_row = i + 1
+                break
+        
+        if chip_row is None:
+            print("未找到芯片型号行")
+            return False
+        
+        # 提取芯片型号列表
+        chips = []
+        for cell in rows[chip_row]:
+            cell = clean_text(cell)
+            if cell and (cell.startswith('MT') or cell.startswith('T') or cell == 'NTK'):
+                chips.append(cell)
+        
+        print(f"找到芯片型号: {chips}")
+        
+        # 构建JSON数据结构
+        result = {}
+        
+        # 从数据行开始解析
+        for i in range(data_start_row, len(rows)):
+            row = rows[i]
+            if not row or len(row) < 2:
+                continue
+            
+            func_name = clean_text(row[0]) if len(row) > 0 else ""
+            if not func_name or func_name in ['启动', '指令功能', '']:
+                continue
+            
+            # 遍历每个芯片对应的指令
+            for j, chip in enumerate(chips):
+                if j + 1 < len(row):
+                    cmd = clean_text(row[j + 1])
+                    if cmd and cmd not in [',', '', '""']:
+                        if chip not in result:
+                            result[chip] = {}
+                        result[chip][func_name] = cmd
+                        print(f"添加指令: {chip} | {func_name}")
+        
+        # 保存JSON文件
+        with open(json_file, 'w', encoding='utf-8') as f:
+            json.dump(result, f, ensure_ascii=False, indent=2)
+        
+        print(f"转换完成，共 {len(result)} 个芯片")
+        return True
+        
+    except Exception as e:
+        print(f"转换失败: {e}")
+        return False
+
+if __name__ == "__main__":
+    # 找到CSV文件
+    csv_files = [f for f in os.listdir('.') if f.endswith('.csv')]
+    if not csv_files:
+        print("未找到CSV文件")
+        sys.exit(1)
+    
+    csv_file = csv_files[0]
+    json_file = 'mi_commands.json'
+    
+    success = csv_to_json(csv_file, json_file)
+    if not success:
+        sys.exit(1)
+EOF
+
+          # 执行转换
+          python convert.py
+          
+      - name: Commit JSON file
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add mi_commands.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-convert CSV to JSON"
+          git push
